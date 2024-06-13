@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Used Car Price Predictor</title>
+    <link rel="stylesheet" href="static/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header" style="text-align: center;">
+            <h2>Welcome to my <span class="badge badge-secondary" style="text-align: center;">CAR PRICE PREDICTOR</span></h2>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Predict the price of your used car easily!</h5>
+            <p class="card-text">Use our simple tool to estimate the market value of your used car. Just enter some details about your car, and we’ll provide an instant valuation.</p>
+            <form method="post"  accept-charset="utf-8">
+                <div class="col-18 form-group" style="text-align: center;">
+                    <label><b>Enter the Brand of your Car</b></label>
+                    <select class="selectpicker form-control" id="company" name="company" required="1" onchange="load_car_models(this.value)">
+                        {% for company in companies %}
+                        <option value="{{ company }}">{{ company }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-18 form-group" style="text-align: center;">
+                    <label><b>Enter the Model of the Car</b></label>
+                    <select class="selectpicker form-control" id="car_model" name="car_model" required="1">
+                        <option value=""></option>
+                    </select>
+                </div>
+                <div class="col-18 form-group" style="text-align: center;">
+                    <label><b>Enter Year of Purchase</b></label>
+                    <select class="selectpicker form-control" id="year" name="year" required="1">
+                        {% for year in years %}
+                        <option value="{{ year }}">{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-18 form-group" style="text-align: center;">
+                    <label><b>What's the Fuel Type</b></label>
+                    <select class="selectpicker form-control" id="fuel_type" name="fuel_type" required="1">
+                        {% for fuel_type in fuel_types %}
+                        <option value="{{ fuel_type }}">{{ fuel_type }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-18 form-group" style="text-align: center;">
+                    <label><b>How many Kms did it run</b></label>
+                    <input class="form-control" type="text" id="kilo_driven" name="kilo_driven">
+                </div>
+                <button class="btn btn-primary form-control" onclick="send_data()">Predict Price</button>
+            </form>
+            <br>
+            <div class="row">
+                <div class="col-12" style="text-align: center">
+                    <h4><span id="prediction"></span></h4>
+                </div>
+        </div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    function load_car_models(selected_company) {
+        $.ajax({
+            url: '/get_car_models',
+            type: 'POST',
+            data: {company: selected_company},
+            success: function(response) {
+                var car_models_dropdown = $('#car_model');
+                car_models_dropdown.empty();
+                $.each(response.models, function(index, model) {
+                    car_models_dropdown.append($('<option>').text(model).attr('value', model));
+                });
+            }
+        });
+    }
+
+    function form_handler(event) {
+        event.preventDefault(); // Don't submit the form normally
+    }
+    function send_data()
+    {
+        document.querySelector('form').addEventListener("submit",form_handler);
+
+        var fd=new FormData(document.querySelector('form'));
+
+        var xhr= new XMLHttpRequest({mozSystem: true});
+
+        xhr.open('POST','/predict',true);
+        document.getElementById('prediction').innerHTML="Wait! Predicting Price.....";
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState == XMLHttpRequest.DONE){
+                document.getElementById('prediction').innerHTML="Prediction: ₹"+xhr.responseText;
+
+            }
+        };
+
+        xhr.onload= function(){};
+
+        xhr.send(fd);
+    }
+
+</script>
+
+</body>
+</html>
